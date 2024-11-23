@@ -1,5 +1,7 @@
 import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 import org.gradle.api.tasks.testing.logging.TestLogEvent
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
 /*
@@ -108,9 +110,9 @@ allprojects {
     }
 
     tasks.withType<KotlinCompile>().configureEach {
-        kotlinOptions {
-            jvmTarget = "11"
-            languageVersion = "1.9"
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_11
+            languageVersion = KotlinVersion.KOTLIN_1_9
             freeCompilerArgs = listOf("-Xjvm-default=all") // For generating default methods in interfaces
         }
     }
@@ -141,7 +143,11 @@ subprojects {
         repositories {
             maven {
                 name = "panda-repository"
-                url = uri("https://maven.reposilite.com/${if (version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"}")
+                url = uri(
+                    "https://maven.reposilite.com/${
+                        if (version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"
+                    }"
+                )
                 credentials {
                     username = System.getenv("MAVEN_NAME") ?: property("mavenUser").toString()
                     password = System.getenv("MAVEN_TOKEN") ?: property("mavenPassword").toString()
@@ -157,9 +163,15 @@ subprojects {
                 pom.withXml {
                     val repositories = asNode().appendNode("repositories")
                     project.repositories.findAll(closureOf<Any> {
-                        if (this is MavenArtifactRepository && this.url.toString().startsWith("https")) {
+                        if (this is MavenArtifactRepository && this.url.toString()
+                                .startsWith("https")
+                        ) {
                             val repository = repositories.appendNode("repository")
-                            repository.appendNode("id", this.url.toString().replace("https://", "").replace(".", "-").replace("/", "-"))
+                            repository.appendNode(
+                                "id",
+                                this.url.toString().replace("https://", "").replace(".", "-")
+                                    .replace("/", "-")
+                            )
                             repository.appendNode("url", this.url.toString())
                         }
                     })
