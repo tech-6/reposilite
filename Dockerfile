@@ -1,11 +1,10 @@
 # Build stage
-FROM openjdk:21-slim AS build
+FROM amazoncorretto:21-al2023-jdk AS build
+RUN \
+    yum install -y findutils
 COPY . /home/reposilite-build
 WORKDIR /home/reposilite-build
-RUN \
-  rm -rf reposilite-frontend/node_modules
-RUN \
-  apt-get update; apt-get install -y curl
+
 RUN \
   export GRADLE_OPTS="-Djdk.lang.Process.launchMechanism=vfork" && \
   chmod +x gradlew && \
@@ -25,15 +24,32 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.version=$VERSION \
       org.label-schema.schema-version="1.0"
 
-# Run stage
-FROM openjdk:21-slim
-RUN mkdir -p /app/data && mkdir -p /var/log/reposilite
-VOLUME /app/data
+FROM amazoncorretto:21-al2023-headless AS correto-al2023
+# Configure UID and GID
+ARG UID="999"
+ARG GID="999"
+
+RUN yum install -y shadow-utils && yum clean all &&\
+    mkdir -p /app/data &&  \
+    mkdir -p /var/log/reposilite && \
+    groupadd --gid "$GID" reposilite && \
+    useradd \
+    --system \
+    --home-dir /app \
+    --no-create-home \
+    --no-user-group \
+    --shell "/usr/sbin/nologin" \
+    --gid "$GID" \
+    --uid "$UID" reposilite
+
 WORKDIR /app
 COPY --from=build /home/reposilite-build/reposilite-backend/build/libs/reposilite-3*.jar reposilite.jar
 COPY --from=build /home/reposilite-build/entrypoint.sh entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-RUN apt-get update && apt-get -y install util-linux curl
+RUN chmod +x /app/entrypoint.sh && \
+    chown --recursive "$UID:$GID" /app
+USER reposilite
+VOLUME /app/data
+
 HEALTHCHECK --interval=30s --timeout=30s --start-period=15s \
     --retries=3 CMD [ "sh", "-c", "URL=$(cat /app/data/.local/reposilite.address); echo -n \"curl $URL... \"; \
     (\
