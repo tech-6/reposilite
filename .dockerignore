@@ -2,6 +2,7 @@
 build/
 .idea/
 .gradle/
+.kotlin/
 
 # Dockerfile related files do not need to be included
 Dockerfile
@@ -11,4 +12,6 @@ docker-compose.yml
 # Not used in running application
 reposilite-site
 reposilite-test
+reposilite-plugins
 .github/
+.codecov.yml
