@@ -2,7 +2,7 @@
 name: "Publish snapshots"
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "dockerfile-bellsoft-liberica" ]
 
 env:
   JAVA_VERSION: 21
