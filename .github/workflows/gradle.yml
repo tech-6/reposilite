@@ -39,8 +39,8 @@ jobs:
       with:
         arguments: ":reposilite-backend:testCoverage"
 
-    - name: "Upload coverage to Codecov"
-      uses: codecov/codecov-action@v2
-      with:
-        files: "./reposilite-backend/build/reports/jacoco/reposilite-backend-report.xml"
-        fail_ci_if_error: false
+#    - name: "Upload coverage to Codecov"
+#      uses: codecov/codecov-action@v2
+#      with:
+#        files: "./reposilite-backend/build/reports/jacoco/reposilite-backend-report.xml"
+#        fail_ci_if_error: false
