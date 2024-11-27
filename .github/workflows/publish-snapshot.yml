@@ -2,7 +2,7 @@
 name: "Publish snapshots"
 on:
   push:
-    branches: [ "dockerfile-bellsoft-liberica" ]
+    branches: [ "**" ]
 
 env:
   JAVA_VERSION: 21
@@ -64,5 +64,5 @@ jobs:
           context: .
           push: true
           tags: |
-            technicolorlabs/reposilite-liberica-testing:nightly
+            technicolorlabs/reposilite-liberica-testing:${{ github.ref_name }}
             
