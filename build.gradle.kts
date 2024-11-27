@@ -78,18 +78,30 @@ allprojects {
         throw IllegalStateException("Version is not set, please run 'git fetch --tags' command to fetch tags from main repository.")
     }
 
+
     repositories {
-        maven("https://mvn.littleoni.net/releases") {
+        maven("https://maven.reposilite.com/maven-central") {
             mavenContent {
                 releasesOnly()
             }
         }
-        maven("https://mvn.littleoni.net/snapshots") {
+        maven("https://maven.reposilite.com/releases") {
+            mavenContent {
+                releasesOnly()
+            }
+        }
+        maven("https://maven.reposilite.com/snapshots") {
             mavenContent {
                 snapshotsOnly()
             }
         }
+        maven("https://jitpack.io") {
+            mavenContent {
+                releasesOnly()
+            }
+        }
     }
+
 
     java {
         sourceCompatibility = JavaVersion.VERSION_11
@@ -103,7 +115,8 @@ allprojects {
         compilerOptions {
             jvmTarget = JvmTarget.JVM_11
             languageVersion = KotlinVersion.KOTLIN_1_9
-            freeCompilerArgs = listOf("-Xjvm-default=all") // For generating default methods in interfaces
+            freeCompilerArgs =
+                listOf("-Xjvm-default=all") // For generating default methods in interfaces
         }
     }
 }
@@ -132,8 +145,12 @@ subprojects {
     publishing {
         repositories {
             maven {
-                name = "panda-repository"
-                url = uri("https://maven.reposilite.com/${if (version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"}")
+                name = "LittleOniMaven"
+                url = uri(
+                    "https://mvn.littleoni.net/${
+                        if (version.toString().endsWith("-SNAPSHOT")) "snapshots" else "releases"
+                    }"
+                )
                 credentials {
                     username = System.getenv("MAVEN_NAME") ?: property("mavenUser").toString()
                     password = System.getenv("MAVEN_TOKEN") ?: property("mavenPassword").toString()
@@ -149,9 +166,15 @@ subprojects {
                 pom.withXml {
                     val repositories = asNode().appendNode("repositories")
                     project.repositories.findAll(closureOf<Any> {
-                        if (this is MavenArtifactRepository && this.url.toString().startsWith("https")) {
+                        if (this is MavenArtifactRepository && this.url.toString()
+                                .startsWith("https")
+                        ) {
                             val repository = repositories.appendNode("repository")
-                            repository.appendNode("id", this.url.toString().replace("https://", "").replace(".", "-").replace("/", "-"))
+                            repository.appendNode(
+                                "id",
+                                this.url.toString().replace("https://", "").replace(".", "-")
+                                    .replace("/", "-")
+                            )
                             repository.appendNode("url", this.url.toString())
                         }
                     })
