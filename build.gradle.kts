@@ -79,24 +79,14 @@ allprojects {
     }
 
     repositories {
-        maven("https://maven.reposilite.com/maven-central") {
+        maven("https://mvn.littleoni.net/releases") {
             mavenContent {
                 releasesOnly()
             }
         }
-        maven("https://maven.reposilite.com/releases") {
-            mavenContent {
-                releasesOnly()
-            }
-        }
-        maven("https://maven.reposilite.com/snapshots") {
+        maven("https://mvn.littleoni.net/snapshots") {
             mavenContent {
                 snapshotsOnly()
-            }
-        }
-        maven("https://jitpack.io") {
-            mavenContent {
-                releasesOnly()
             }
         }
     }
