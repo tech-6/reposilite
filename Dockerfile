@@ -16,6 +16,42 @@ RUN --mount=type=cache,target=/root/.gradle <<EOF
   ./gradlew :reposilite-backend:shadowJar --no-daemon --stacktrace
 EOF
 
+# CDS
+RUN <<EOF
+timeout -k 30 5 java \
+-Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
+-Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
+-Xshare:off \
+-XX:DumpLoadedClassList=reposilite.classlist \
+-jar reposilite-backend/build/libs/reposilite-3*.jar
+
+timeout -k 30 5 java \
+-Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
+-Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
+-Xshare:dump \
+-XX:SharedArchiveFile=reposilite.jsa \
+-XX:SharedClassListFile=reposilite.classlist \
+-jar reposilite-backend/build/libs/reposilite-3*.jar
+
+timeout -k 30 5 java \
+-Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
+-Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
+-XX:SharedArchiveFile=reposilite.jsa \
+-Xlog:class+load \
+-jar reposilite-backend/build/libs/reposilite-3*.jar
+
+export exit=$?
+
+if [ $exit -eq 143 ]
+then
+  exit 0
+else
+  exit $exit
+fi
+EOF
+
+ENV JAVA_OPTS="$JAVA_OPTS -XX:SharedArchiveFile=reposilite.jsa"
+
 # Build-time metadata stage
 ARG BUILD_DATE
 ARG VCS_REF
@@ -32,7 +68,7 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
 
 
 # Run stage
-FROM bellsoft/liberica-runtime-container:jre-21-slim-musl AS run
+FROM bellsoft/liberica-runtime-container:jre-21-cds-slim-musl AS run
 
 # Run everything at the lowest possible permissions
 ARG PGID="977"
@@ -52,8 +88,10 @@ RUN <<EOF
 EOF
 
 WORKDIR /app
-COPY --from=build /home/reposilite-build/reposilite-backend/build/libs/reposilite-3*.jar reposilite.jar
 COPY --chmod=755 entrypoint.sh entrypoint.sh
+COPY --from=build /home/reposilite-build/reposilite-backend/build/libs/reposilite-3*.jar reposilite.jar
+COPY --from=build /home/reposilite-build/reposilite.jsa reposilite.jsa
+
 RUN <<EOF
     chown -R "$PUID:$PGID" /app /var/log/reposilite
 EOF
