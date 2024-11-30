@@ -57,6 +57,11 @@ jobs:
           username: "${{ secrets.DOCKERHUB_USERNAME }}"
           password: "${{ secrets.DOCKERHUB_TOKEN }}"
 
+      - name: Extract branch name
+        shell: bash
+        run: echo "branch=${GITHUB_HEAD_REF:-${GITHUB_REF#refs/heads/}}" >> $GITHUB_OUTPUT
+        id: extract_branch
+
       - name: "Build and push"
         id: docker_build
         uses: docker/build-push-action@v3
@@ -64,5 +69,5 @@ jobs:
           context: .
           push: true
           tags: |
-            technicolorlabs/reposilite-liberica-testing:${{ github.ref_name }}
+            technicolorlabs/reposilite-liberica-testing:${{ steps.extract_branch.outputs.branch }}
             
