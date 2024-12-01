@@ -26,22 +26,19 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.schema-version="1.0"
 
 # Run stage
-FROM openjdk:21-slim
-RUN mkdir -p /app/data && mkdir -p /var/log/reposilite
 FROM eclipse-temurin:21-jre-noble AS run
+RUN mkdir -p /app/data && mkdir -p /var/log/reposilite
+
 VOLUME /app/data
 
 RUN <<EOF
     mkdir -p /app/data
     mkdir -p /var/log/reposilite
 EOF
-
 WORKDIR /app
 COPY --chmod=755 entrypoint.sh entrypoint.sh
+
 COPY --from=build /home/reposilite-build/reposilite-backend/build/libs/reposilite-3*.jar reposilite.jar
-COPY --from=build /home/reposilite-build/entrypoint.sh entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
-RUN apt-get update && apt-get -y install util-linux curl
 HEALTHCHECK --interval=30s --timeout=30s --start-period=15s \
     --retries=3 CMD [ "sh", "-c", "URL=$(cat /app/data/.local/reposilite.address); echo -n \"curl $URL... \"; \
     (\
