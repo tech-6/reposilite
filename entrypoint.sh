@@ -11,10 +11,10 @@ case "$REPOSILITE_OPTS" in
 esac
 
 debug_message () {
-  printf "\033[1;33mDEBUG: $1\033[0m\n"
+  printf "\033[1;33mDEBUG: %s\033[0m\n" $1
 }
 
-if [ -z "${REPOSILITE_DEBUG_ENTRYPOINT}" ]; then
+if [ "${REPOSILITE_DEBUG_ENTRYPOINT}" ]; then
   debug_message "Java executable: $(which java)"
 fi
 
@@ -22,6 +22,13 @@ fi
 if [ "$(id -u)" != 0 ]; then
   debug_message "User: $(id -un) ($(id -u))"
   debug_message "groups: $(id -Gn) ($(id -G))"
+
+  exec java \
+       -Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
+       -Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
+       $JAVA_OPTS \
+       -jar reposilite.jar \
+       $REPOSILITE_ARGS
 # GH-1200: run as non-root user
 else
 
