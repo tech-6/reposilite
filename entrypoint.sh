@@ -11,7 +11,7 @@ case "$REPOSILITE_OPTS" in
 esac
 
 debug_message () {
-  printf "\033[1;33mDEBUG: %s\033[0m\n" $1
+  printf "\033[1;33mDEBUG: %s\033[0m\n" "$1"
 }
 
 if [ "${REPOSILITE_DEBUG_ENTRYPOINT}" ]; then
@@ -23,7 +23,7 @@ if [ "$(id -u)" != 0 ]; then
   debug_message "User: $(id -un) ($(id -u))"
   debug_message "groups: $(id -Gn) ($(id -G))"
 
-  exec java \
+  exec /opt/java/openjdk/bin/java \
        -Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
        -Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
        $JAVA_OPTS \
@@ -60,7 +60,7 @@ else
   chown -R reposilite:reposilite /var/log/reposilite 
 
   exec runuser -u reposilite -- \
-    java \
+    /opt/java/openjdk/bin/java \
        -Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
        -Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
        $JAVA_OPTS \
