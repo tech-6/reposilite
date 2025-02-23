@@ -10,22 +10,9 @@ case "$REPOSILITE_OPTS" in
   *                      ) REPOSILITE_ARGS="--working-directory=/app/data $REPOSILITE_ARGS";;
 esac
 
-start_reposilite () {
-  debug_message "User: $(id -un) ($(id -u))"
-  debug_message "groups: $(id -Gn) ($(id -G))"
-
-  exec java \
-       -Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
-       -Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
-       $JAVA_OPTS \
-       -jar reposilite.jar \
-       $REPOSILITE_ARGS
-}
-
 debug_message () {
   printf "\033[1;33mDEBUG: $1\033[0m\n"
 }
-
 
 if [ -z "${REPOSILITE_DEBUG_ENTRYPOINT}" ]; then
   debug_message "Java executable: $(which java)"
@@ -33,7 +20,8 @@ fi
 
 # GH-1762: support for running as non-root user
 if [ "$(id -u)" != 0 ]; then
-  start_reposilite
+  debug_message "User: $(id -un) ($(id -u))"
+  debug_message "groups: $(id -Gn) ($(id -G))"
 # GH-1200: run as non-root user
 else
 
@@ -65,5 +53,10 @@ else
   chown -R reposilite:reposilite /var/log/reposilite 
 
   exec runuser -u reposilite -- \
-    start_reposilite
+    java \
+       -Dtinylog.writerFile.file="/var/log/reposilite/log_{date}.txt" \
+       -Dtinylog.writerFile.latest=/var/log/reposilite/latest.log \
+       $JAVA_OPTS \
+       -jar reposilite.jar \
+       $REPOSILITE_ARGS
 fi
